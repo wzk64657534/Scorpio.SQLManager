@@ -1,0 +1,82 @@
+﻿@*@model List<Scorpio.Core.Model.TableStructure>
+    <table class="layui-table">
+        <colgroup>
+            <col>
+            <col>
+            <col>
+            <col>
+            <col>
+            <col>
+            <col>
+            <col>
+            <col>
+        </colgroup>
+        <thead>
+            <tr>
+                <th>序号</th>
+                <th>字段名称</th>
+                <th>是否是主键</th>
+                <th>字段类型</th>
+                <th>字段长度</th>
+                <th>小数位数</th>
+                <th>是否为空</th>
+                <th>默认值</th>
+                <th>说明</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+
+                    <td>@item.Num</td>
+                    <td>@item.FieldName</td>
+                    <td>@item.IsKey</td>
+                    <td>@item.FieldType</td>
+                    <td>@item.FieldLength</td>
+                    <td>@item.DecimalDigit</td>
+                    <td>@item.IsNull</td>
+                    <td>@item.DefaultValue</td>
+                    <td>@item.Explain</td>
+
+                </tr>
+
+            }
+            </tbody>
+    </table>*@
+
+<table class="layui-hide" id="test-table-cellEdit" lay-filter="test-table-cellEdit"></table>
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+  layui.config({
+    base: '../../../layuiadmin/' //静态资源所在路径
+  }).extend({
+    index: 'lib/index' //主入口模块
+  }).use(['index', 'table'], function(){
+    var table = layui.table;
+
+    table.render({
+      elem: '#test-table-cellEdit'
+      ,url: layui.setter.base + 'json/table/demo.js'
+      ,cols: [[
+         {field:'id', title:'ID', width:80, sort: true}
+        ,{field:'username', title:'用户名', width:120, sort: true, edit: 'text'}
+        ,{field:'email', title:'邮箱', edit: 'text', minWidth: 150}
+        ,{field:'sex', title:'性别', width:80, edit: 'text'}
+        ,{field:'city', title:'城市', edit: 'text', minWidth: 100}
+        ,{field:'experience', title:'积分', sort: true, edit: 'text'}
+      ]]
+    })
+
+    //监听单元格编辑
+    table.on('edit(test-table-cellEdit)', function(obj){
+      var value = obj.value //得到修改后的值
+      ,data = obj.data //得到所在行所有键值
+      ,field = obj.field; //得到字段
+      layer.msg('[ID: '+ data.id +'] ' + field + ' 字段更改为：'+ value, {
+        offset: '15px'
+      });
+    });
+
+  });
+</script>

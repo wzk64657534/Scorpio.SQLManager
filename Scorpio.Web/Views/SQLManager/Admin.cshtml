@@ -1,0 +1,144 @@
+﻿
+@{
+    ViewData["Title"] = "Admin";
+    Layout = "~/Views/Shared/_LayoutLayui.cshtml";
+    int count = 0;
+}
+<div class="layui-fluid">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-md3">
+            <div class="layui-card">
+                <div class="layui-card-header">数据库表</div>
+                <div class="layui-card-body layui-text">
+                    <table class="layui-hide" id="sqlTable" lay-filter="sqlTable"></table>
+                </div>
+            </div>
+        </div>
+        <div class="layui-col-md9">
+            <div class="layui-card">
+                <div class="layui-card-header">表结构</div>
+                <div class="layui-card-body layui-text">
+                    <table class="layui-hide" id="test-table-cellEdit" lay-filter="test-table-cellEdit"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="~/layuiadmin/layui/layui.js"></script>
+<script>
+    layui.config({
+        base: '../layuiadmin/' //静态资源所在路径
+    }).extend({
+        index: 'lib/index' //主入口模块
+    }).use(['index', 'table'], function () {
+        var $ = layui.$,
+            table = layui.table;
+        table.render({
+            elem: '#sqlTable'
+            , height: 'full-100'
+            , url: '/SQLManager/GetSQLTableList'
+            , cols: [[
+                { field: 'num', title: '序号', width: 70 }
+                ,
+                { field: 'tableName', title: '表名', width: 180 }
+                ,
+                {
+                    field: 'tableExplain', title: '说明', event: 'tableExplain', style: 'cursor: pointer;'
+                }
+            ]]
+        })
+        //监听行单击事件
+        table.on('row(sqlTable)', function (obj) {
+            var tableName = obj.data.tableName;
+            table.render({
+                elem: '#test-table-cellEdit'
+                , toolbar: true
+                , url: '/SQLManager/Table?tableName=' + tableName
+                , cols: [[
+                    { field: 'tableName', title: '表名', hide: true }
+                    , { field: 'num', title: '序号', width: 70 }
+                    , { field: 'fieldName', title: '字段名称' }
+                    , { field: 'isKey', title: '是否主键', minWidth: 100 }
+                    , { field: 'fieldType', title: '字段类型', width: 120 }
+                    , { field: 'fieldLength', title: '字段长度', minWidth: 100 }
+                    , { field: 'decimalDigit', title: '小数位数' }
+                    , { field: 'isNull', title: '是否为空' }
+                    , { field: 'defaultValue', title: '默认值' }
+                    , { field: 'explain', title: '说明(可编辑)', event: 'explain', style: 'cursor: pointer;' }
+                ]]
+            })
+            //监听单元格编辑
+            table.on('tool(test-table-cellEdit)', function (obj) {
+                var data = obj.data;
+                if (obj.event === 'explain') {
+                    var fieldName = data.fieldName;
+                    var tableName = data.tableName;
+                    var explain = data.explain;
+
+                    layer.prompt({
+                        formType: 2
+                        , title: '修改 字段 为 [' + data.fieldName + '] 的说明'
+                        , value: data.explain
+                    }, function (value, index) {
+                        var operationType = 1;
+                        if (explain == " ") {
+                               operationType = 0;
+                        }
+                        $.post("/SQLManager/AddOrUpdateTableFieldExplain", { "table": tableName, "column": fieldName, "value": value, "operationType": operationType }, function (data) {
+                            if (data > 0) {
+                                layer.close(index);
+
+                                //这里一般是发送修改的Ajax请求
+
+                                //同步更新表格和缓存对应的值
+                                obj.update({
+                                    explain: value
+                                });
+                            }
+                            else {
+                                layer.msg("修改失败");
+                            }
+                        });
+
+                    });
+                }
+            });
+        });
+
+        table.on('tool(sqlTable)', function (obj) {
+                if (obj.event === 'tableExplain') {
+                    var tableName = obj.data.tableName;
+                    var explain = obj.data.tableExplain;
+
+                    layer.prompt({
+                        formType: 2
+                        , title: '修改 字段 为 [' + obj.data.tableName + '] 的说明'
+                        , value: obj.data.tableExplain
+                    }, function (value, index) {
+                        var operationType = 1;
+                        if (explain == "") {
+                            operationType = 0;
+                        }
+                        $.post("/SQLManager/AddOrUpdateTableExplain", { "table": tableName, "value": value, "operationType": operationType }, function (eve) {
+                            if (eve > 0) {
+                                layer.close(index);
+
+                                //这里一般是发送修改的Ajax请求
+
+                                //同步更新表格和缓存对应的值
+                                obj.update({
+                                    tableExplain: value
+                                });
+                            }
+                            else {
+                                layer.msg("修改失败");
+                            }
+                        });
+
+                    });
+                }
+
+            });
+    });
+</script>
+
